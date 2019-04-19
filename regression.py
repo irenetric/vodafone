@@ -9,58 +9,58 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.decomposition import PCA
-from scipy import stats
-from statsmodels.regression.linear_model import OLS
-
-datac = pd.read_csv('data_train.csv') #read the data
-
-y = np.array(datac['Footfall']) #get the variable to be predicted
-
-datac.drop(['Footfall'], axis = 1, inplace = True) #drop from your dataset
-
-n_features = datac.shape[1] #get the number of features
-n_obs = datac.shape[0] #get the number of observations
-
-feature_list = datac.columns.values #get a list of all the features (coloumns header)
 
 
+df = pd.read_csv('data_train.csv') #read the data
 
+y = np.array(df['Footfall']) #get the variable to be predicted
 
+df.drop(['Footfall'], axis = 1, inplace = True) #drop from your dataset
+df.drop(['Store_ID'], axis = 1, inplace = True) #also this is just irrelevant
 
+n_features = df.shape[1] #get the number of features
+n_obs = df.shape[0] #get the number of observations
 
-dummy_tipologia = pd.DataFrame(pd.get_dummies(datac['Tipologia_encoded']))
-dummy_provincia = pd.DataFrame(pd.get_dummies(datac['Provincia_encoded']))
-dummy_localita = pd.DataFrame(pd.get_dummies(datac['Localita_encoded']))
-dummy_area = pd.DataFrame(pd.get_dummies(datac['area_encoded']))
+feature_list = df.columns.values #get a list of all the features (coloumns header)
 
+#get dummies for each categorical variables
+dummy_tipologia = pd.DataFrame(pd.get_dummies(df['Tipologia_encoded']))
+dummy_provincia = pd.DataFrame(pd.get_dummies(df['Provincia_encoded']))
+dummy_localita = pd.DataFrame(pd.get_dummies(df['Localita_encoded']))
+dummy_area = pd.DataFrame(pd.get_dummies(df['area_encoded']))
 
-data = pd.concat([datac, dummy_tipologia, dummy_provincia, dummy_localita], axis = 1, ignore_index = True)
+#attach to the dataset all the dummy variables
+data = pd.concat([df, dummy_tipologia, dummy_provincia, dummy_localita], axis = 1, ignore_index = True)
 
+#check if the model can be fitted linearly
 ###############   Linearity test - Ramsey RESET    #############
 model = LinearRegression()
-model.fit(data, y)
-y_hat = model.predict(data) #get y hat
+datadf = pd.DataFrame(PCA(n_components=5).fit_transform(data))
+model.fit(datadf, y)
+y_hat = model.predict(datadf) #get y hat
 
-y_squared = pd.DataFrame(y**2)
-y_third = pd.DataFrame(y**3)
+y_squared = pd.DataFrame(y_hat**2)
+y_third = pd.DataFrame(y_hat**3)
 
-merged_dataset = pd.concat([data, y_squared, y_third], axis = 1)
+merged_df = pd.concat([datadf, y_squared, y_third], axis = 1)
+
 
 modelu = LinearRegression()
-modelu.fit(merged_dataset, y)
-y_merged = modelu.predict(merged_dataset)
+modelu.fit(merged_df, y)
+y_merged = modelu.predict(merged_df)
 
 RSS_restr = np.sum((y_hat - y)**2)
 RSS_unr = np.sum((y_merged - y)**2)
-j = 2 
-F_test = ((RSS_restr - RSS_unr) / j) / (RSS_unr / (n_obs - (n_features + 2) - 1))
+j = 2
+F_test = ((RSS_restr - RSS_unr) / j) / (RSS_unr / (n_obs - 7 - 1))
 
-#n_features = data.shape[1] #get the number of features
-#n_obs = data.shape[0] #get the number of observations
-#
-#feature_list = data.columns.values #get a list of all the features (coloumns header)
-#
-##an array of correlation coefficients between the targets and the data
+cv = 4.667 #df(2, 300) at a significance level 0.01
+
+####F_test < critical value, no evidence to reject the null hypothesis that the
+###higher order parameter are equal to zero.
+
+
+##create array of correlation coefficients between the targets and the data
 dat = np.array(data)
 corr_list = []
 for i in range(len(data.columns.values)):
