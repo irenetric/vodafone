@@ -8,9 +8,7 @@
 
 ### Evaluation:
 - The evaluation metrics are the Residual Sum of Squares (regression task) and Accuracy (classification task):
-```latex
-RRS = \frac{1}{N} \sum_{i=1}^{N}(y^{_{i}}-f(x^{_{i}}))^{^{2}}
-```
-```latex
-Acc = \frac{TP+TN}{TP+TN+FP+FN}
-```
+
+$\texttt{RRS} = \frac{1}{N} \sum_{i=1}^{N}(y^{_{i}}-f(x^{_{i}}))^{^{2}}$
+
+$\texttt{Acc} = \frac{TP+TN}{TP+TN+FP+FN}$
